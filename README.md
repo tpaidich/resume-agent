@@ -4,6 +4,8 @@ Tools for running a job search: score a posting against your resume, tailor a
 one-page PDF for it, and draft outreach. Nothing here applies to a job. Every
 path ends with a file or a draft in front of you.
 
+<img width="387" height="706" alt="Screenshot 2026-09-09 at 11 11 24 PM" src="https://github.com/user-attachments/assets/3c44ab3a-69a6-4600-bb54-83b8eff02be9" />
+
 ## What's in here
 
 **Chrome extension plus a local server.** The main thing. Open a job posting and
@@ -66,3 +68,4 @@ named slots, so its structure cannot drift.
 
 The bullet limits and section keys there are named after specific employers.
 Adapting this to your own resume means editing that map.
+
