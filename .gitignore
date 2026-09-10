@@ -1,0 +1,35 @@
+# ---------------------------------------------------------------------------
+# Personal data. This repository is public; none of this belongs in it.
+# ---------------------------------------------------------------------------
+
+# Your real resume: contact details, work history, work authorization.
+# See resume/master.example.yaml and resume/template.example.tex for the shape.
+resume/master.yaml
+resume/template.tex
+
+# Generated resumes, the application tracker, and the score cache. These record
+# which jobs you applied to and what you scored, which is nobody else's business.
+applications/
+
+# Your outreach phrasing. See config/outreach.example.yaml.
+config/outreach.yaml
+
+# Unrelated archive that happens to live in resume/.
+resume/*.zip
+
+# ---------------------------------------------------------------------------
+# Secrets and environment
+# ---------------------------------------------------------------------------
+.env
+.env.*
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+# Build and OS noise
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store

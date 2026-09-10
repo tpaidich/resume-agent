@@ -1,0 +1,7 @@
+# Copy to outreach.yaml and edit.
+#
+# How the cold message opener describes what you do now. It completes:
+#   "My name is <name> and I'm currently ..."
+# Write the phrasing you actually want, which is rarely the literal job title.
+# Left unset, the server falls back to the most recent role in resume/master.yaml.
+current_role: "a software engineer at an early stage startup"

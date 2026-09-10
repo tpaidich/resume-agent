@@ -1,0 +1,92 @@
+# Copy to master.yaml and fill in with your own resume.
+#
+# master.yaml is gitignored: it holds your real contact details and work
+# history, and this repo is public. This example documents the shape the
+# tools expect.
+#
+# agent_rules below are carried into every prompt that writes on your behalf,
+# so put your hard constraints there.
+
+meta:
+  name: Your Name
+  preferred_name: You
+  email: you@example.com
+  linkedin: linkedin.com/in/your-handle
+  github: github.com/your-handle
+  website: example.com
+  resume_pdf: example.com/resume.pdf
+  location: City, ST
+  work_authorization: Describe yours, or delete this key
+education:
+- degree: B.S. Your Major
+  institution: Your University
+  graduation: Month Year
+  minor: Optional Minor
+coursework:
+- Course One
+- Course Two
+- Course Three
+certifications:
+- name: Certification Name
+  issuer: Issuer
+experience:
+- role: Your Current Role
+  company: Current Company
+  start: Month Year
+  end: present
+  domain:
+  - domain one
+  - domain two
+  tools:
+  - Python
+  - SQL
+  bullets:
+  - Achievement with a concrete metric.
+  - Another achievement, naming the tools you used.
+  - A third, showing scope or ownership.
+- role: Earlier Role
+  company: Earlier Company
+  start: Month Year
+  end: Month Year
+  domain:
+  - domain
+  tools:
+  - Tool
+  bullets:
+  - What you built and what changed because of it.
+leadership:
+- role: Role
+  organization: Organization
+  bullets:
+  - What you did.
+skills:
+  languages:
+  - Python
+  - SQL
+  - R
+  ml_and_data:
+  - PyTorch
+  - Pandas
+  databases:
+  - Postgres
+  infra_and_tools:
+  - Docker
+  - Git
+  bi_and_reporting:
+  - Tableau
+  pm_tools:
+  - Jira
+  - Notion
+agent_rules:
+- NEVER use em dashes. Use a semicolon or comma instead.
+- Never add tools not listed under a role's tools field
+- Never rewrite history or fabricate metrics
+- 'Example of a role-specific rule: <Company> role: R and SQL only, no Python'
+- Tailor by emphasis and ordering, not by inventing new bullets
+- Do NOT simplify, shorten, or dumb down bullet text. Preserve technical depth, named
+  tools, and metrics exactly.
+- Do not mirror job posting language verbatim
+- Flag roles that explicitly exclude sponsorship if that applies to you
+  Preserve all specificity, technical depth, named tools, and metrics exactly.
+- Do not mirror job posting language verbatim
+- OPT/STEM OPT eligible — flag roles that explicitly exclude sponsorship

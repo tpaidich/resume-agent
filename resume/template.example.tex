@@ -1,0 +1,88 @@
+% Copy to template.tex and edit.
+%
+% template.tex is gitignored because it carries real contact details.
+% The %%TOKENS%% below are filled by tools/tailor.py; leave them alone.
+
+\documentclass{resume}
+\linespread{0.3}
+\usepackage[T1]{fontenc}
+\usepackage[left=0.4 in,top=0.4in,right=0.4 in,bottom=0.4in]{geometry}
+\newcommand{\tab}[1]{\hspace{.2667\textwidth}\rlap{#1}}
+\newcommand{\itab}[1]{\hspace{0em}\rlap{#1}}
+\name{Your Name}
+\address{(000) 000-0000 \\ City, ST \\ \href{mailto:you@example.com}{you@example.com} \\ \href{https://www.linkedin.com/in/your-handle/}{LinkedIn} \\ \href{https://www.github.com/your-handle}{GitHub} \\ \href{https://example.com}{My Site}}
+
+\begin{document}
+
+%--EDUCATION (LOCKED)--
+\vspace{-12pt}
+\begin{rSection}{Education}
+{\bf Bachelor of Science, Your Major}, Your University \hfill {Mon Year}\\
+{Minor, Business Management} \hfill \textit{}
+\end{rSection}
+
+%--SKILLS AND CERTIFICATIONS (AGENT EDITABLE: select relevant items, reorder within each row)--
+\vspace{-8pt}
+\begin{rSection}{Skills and Certifications}
+\begin{tabular}{ @{} >{\bfseries}l @{\hspace{6ex}} p{5.2in} }
+Languages & %%LANGUAGES%% \\
+ML \& Data & %%ML_DATA%% \\
+Tools \& Platforms & %%TOOLS%% \\
+Certifications & \href{https://www.credly.com/badges/c38b00c2-caa4-4d97-b603-489133aa01ab/public_url}{Alteryx Designer} $\cdot$ \href{https://cp.certmetrics.com/SAS/en/public/verify/credential/67544c080d354b51946c851d4f4bdb8f}{SAS Certified} $\cdot$ \href{https://graphacademy.neo4j.com/c/bb70fb6b-2b74-46f4-8a47-490de096f03e/}{Neo4j Certified} $\cdot$ \href{https://www.credly.com/badges/63482a7a-4a7e-45cc-a73f-81acfa8b45d7/public_url}{Predictive Project Management}
+\end{tabular}\\[4pt]
+\end{rSection}
+
+%--EXPERIENCE (AGENT EDITABLE: bullets reordered/rephrased, never fabricated)--
+\vspace{-12pt}
+\begin{rSection}{EXPERIENCE}
+
+\textbf{Technical Program Manager, Data Science \& Analytics} \hfill Jan 2026 - Present\\
+Current Company (What It Does) \hfill \textit{City, ST}
+\begin{itemize}
+    \itemsep -3pt {}
+    %%FACTORY_INTELLIGENCE_BULLETS%%
+\end{itemize}
+
+\textbf{Credit Risk Data Analyst Intern, Chief Risk Office} \hfill May 2025 - Aug 2025\\
+Tata Consultancy Services \hfill \textit{Chennai, India}
+\begin{itemize}
+    \itemsep -3pt {}
+    %%TCS_BULLETS%%
+\end{itemize}
+
+\textbf{Technical Project Manager \& Teaching Assistant} \hfill Jan 2025 - May 2026\\
+Earlier Organization \hfill \textit{City, ST}
+\begin{itemize}
+    \itemsep -3pt {}
+    %%DATA_MINE_BULLETS%%
+\end{itemize}
+
+\textbf{Undergraduate Data Science Researcher} \hfill Aug 2023 - May 2024\\
+Another Company \hfill \textit{City, ST}
+\begin{itemize}
+    \itemsep -3pt {}
+    %%MERCK_BULLETS%%
+\end{itemize}
+
+\textbf{Undergraduate Data Science Researcher} \hfill Aug 2022 - May 2023\\
+Another Organization \hfill \textit{City, ST}
+\begin{itemize}
+    \itemsep -3pt {}
+    %%NASA_BULLETS%%
+\end{itemize}
+
+\end{rSection}
+
+%--LEADERSHIP (LOCKED)--
+\vspace{-8pt}
+\begin{rSection}{LEADERSHIP}
+\begin{itemize}
+    \itemsep -3pt {}
+    \item \textbf{Organization One} - Your Role: what you did and the scale of it
+    \item \textbf{Organization Two} - Your Role: what you did and the scale of it
+\end{itemize}
+\end{rSection}
+
+%%COURSEWORK_SECTION%%
+
+\end{document}

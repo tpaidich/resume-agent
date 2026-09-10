@@ -1,0 +1,203 @@
+# Curated registry of companies to poll for new postings.
+#
+# This file is hand-maintained, not auto-discovered. Add a company when it is
+# worth tracking; remove it when it stops being.
+#
+#   company     Display name used in the dashboard.
+#   ats         greenhouse | ashby
+#   token       The board slug. Greenhouse: boards.greenhouse.io/<token>
+#               Ashby: jobs.ashbyhq.com/<token>
+#   sponsorship yes | no | unknown
+#
+# On sponsorship: every entry below is `unknown` because no sponsorship policy
+# has actually been verified for any of these companies. `unknown` is the
+# honest default and it is not a filter — unknown postings still show up in the
+# review queue, labeled. Only change an entry to yes/no after confirming it
+# from the company directly (a recruiter, or an explicit statement on their
+# careers site). Do not guess.
+#
+# Tokens below were each confirmed to return a live board.
+
+# --- Companies already in the application tracker ---
+- company: "Kalshi"
+  ats: greenhouse
+  token: "kalshi"
+  sponsorship: unknown
+
+- company: "Kikoff"
+  ats: greenhouse
+  token: "kikoff"
+  sponsorship: unknown
+
+- company: "Beyond Finance"
+  ats: greenhouse
+  token: "beyondfinance"
+  sponsorship: unknown
+
+- company: "Together AI"
+  ats: greenhouse
+  token: "togetherai"
+  sponsorship: unknown
+
+- company: "Gotion"
+  ats: greenhouse
+  token: "gotion"
+  sponsorship: unknown
+
+- company: "Green Thumb Industries"
+  ats: greenhouse
+  token: "greenthumbindustries"
+  sponsorship: unknown
+
+- company: "Point72"
+  ats: greenhouse
+  token: "point72"
+  sponsorship: unknown
+
+- company: "OpenAI"
+  ats: ashby
+  token: "openai"
+  sponsorship: unknown
+
+# --- AI-native companies that hire the target role families ---
+- company: "Anthropic"
+  ats: greenhouse
+  token: "anthropic"
+  sponsorship: unknown
+
+- company: "Scale AI"
+  ats: greenhouse
+  token: "scaleai"
+  sponsorship: unknown
+
+- company: "Sierra"
+  ats: ashby
+  token: "sierra"
+  sponsorship: unknown
+
+- company: "Decagon"
+  ats: ashby
+  token: "decagon"
+  sponsorship: unknown
+
+- company: "Harvey"
+  ats: ashby
+  token: "harvey"
+  sponsorship: unknown
+
+- company: "Mercor"
+  ats: ashby
+  token: "mercor"
+  sponsorship: unknown
+
+- company: "Cursor"
+  ats: ashby
+  token: "cursor"
+  sponsorship: unknown
+
+- company: "Cohere"
+  ats: ashby
+  token: "cohere"
+  sponsorship: unknown
+
+- company: "Replit"
+  ats: ashby
+  token: "replit"
+  sponsorship: unknown
+
+# --- Data / infra platforms ---
+- company: "Databricks"
+  ats: greenhouse
+  token: "databricks"
+  sponsorship: unknown
+
+- company: "Snowflake"
+  ats: ashby
+  token: "snowflake"
+  sponsorship: unknown
+
+- company: "Datadog"
+  ats: greenhouse
+  token: "datadog"
+  sponsorship: unknown
+
+- company: "Fivetran"
+  ats: greenhouse
+  token: "fivetran"
+  sponsorship: unknown
+
+- company: "Amplitude"
+  ats: greenhouse
+  token: "amplitude"
+  sponsorship: unknown
+
+- company: "Vercel"
+  ats: greenhouse
+  token: "vercel"
+  sponsorship: unknown
+
+- company: "Notion"
+  ats: ashby
+  token: "notion"
+  sponsorship: unknown
+
+- company: "Linear"
+  ats: ashby
+  token: "linear"
+  sponsorship: unknown
+
+- company: "Figma"
+  ats: greenhouse
+  token: "figma"
+  sponsorship: unknown
+
+- company: "Asana"
+  ats: greenhouse
+  token: "asana"
+  sponsorship: unknown
+
+- company: "Airtable"
+  ats: greenhouse
+  token: "airtable"
+  sponsorship: unknown
+
+# --- Fintech / consumer ---
+- company: "Stripe"
+  ats: greenhouse
+  token: "stripe"
+  sponsorship: unknown
+
+- company: "Brex"
+  ats: greenhouse
+  token: "brex"
+  sponsorship: unknown
+
+- company: "Ramp"
+  ats: ashby
+  token: "ramp"
+  sponsorship: unknown
+
+- company: "Plaid"
+  ats: ashby
+  token: "plaid"
+  sponsorship: unknown
+
+- company: "Robinhood"
+  ats: greenhouse
+  token: "robinhood"
+  sponsorship: unknown
+
+- company: "Instacart"
+  ats: greenhouse
+  token: "instacart"
+  sponsorship: unknown
+
+- company: "Airbnb"
+  ats: greenhouse
+  token: "airbnb"
+  sponsorship: unknown
+
+- company: "Discord"
+  ats: greenhouse
+  token: "discord"
+  sponsorship: unknown
