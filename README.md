@@ -9,7 +9,7 @@ click drafts a cold message.
 
 It never applies to anything. It hands you a file and a draft. You send them.
 
-<img width="387" height="706" alt="Screenshot 2026-09-09 at 11 11 24 PM" src="https://github.com/user-attachments/assets/3c44ab3a-69a6-4600-bb54-83b8eff02be9" />
+<img width="387" height="706" alt="The verdict panel on a job posting, showing an APPLY verdict with strengths, gaps, and the two action buttons" src="https://github.com/user-attachments/assets/3c44ab3a-69a6-4600-bb54-83b8eff02be9" />
 
 ---
 
