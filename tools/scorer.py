@@ -75,7 +75,38 @@ def _clean_gaps(gaps) -> list[str]:
 
 # Bump when the prompt or rules change. Cached results are keyed on it, so a
 # change actually reaches postings that were scored under the old rules.
-SCORER_VERSION = 2
+SCORER_VERSION = 4
+
+# Scoring runs at temperature 0. At the default, the identical posting scored
+# anywhere from 35 to 52 across five runs, so refreshing a page could flip a
+# verdict between SKIP and MAYBE. At 0 the same text scored 42 all five times.
+SCORING_TEMPERATURE = 0
+
+# How much of a job description the scorer reads. It used to be 3,000
+# characters, which cut most postings partway through, and cut the same
+# posting at different points depending on whether the text came from the
+# page or the board's API. 8,000 covers nearly every posting whole, for
+# roughly a tenth of a cent more per score.
+MAX_DESC_CHARS = 8000
+
+
+def _normalize_description(text: str) -> str:
+    """Strip presentation so the same posting scores the same from any source.
+
+    The model reads formatting as emphasis. One posting scored 35 from a board
+    API that wrote "NON-NEGOTIABLES:" in capitals with dashed bullets, and 52
+    from the page that wrote "Non-negotiables:" plainly. Same words, same
+    requirements. With this applied, both scored 52.
+    """
+    text = re.sub(r"\[?https?://\S+\]?", "", text or "")
+    lines = []
+    for line in text.splitlines():
+        line = re.sub(r"^[-*\u2022\u00b7]\s+", "", line.strip())
+        if len(line) > 3 and line.isupper():
+            line = line.capitalize()
+        if line:
+            lines.append(line)
+    return "\n".join(lines)
 
 
 def _cache_key(url: str) -> str:
@@ -121,7 +152,7 @@ Be precise — only flag something as a gap if it is genuinely absent from the r
 
 JOB: {job['title']} at {job['company']}
 DESCRIPTION:
-{job['description'][:3000]}
+{_normalize_description(job['description'])[:MAX_DESC_CHARS]}
 
 FULL RESUME:
 {resume_text}
@@ -143,6 +174,7 @@ Return JSON only — no prose, no markdown fences:
         model="claude-haiku-4-5-20251001",
         max_tokens=1024,
         system=_SYSTEM,
+        temperature=SCORING_TEMPERATURE,
         messages=[{"role": "user", "content": prompt}],
     )
 
@@ -190,7 +222,7 @@ def score_jobs_batch(jobs: list[dict], master: dict) -> list[dict]:
 
     jobs_block = "\n\n".join(
         f"JOB {seq}: {jobs[i]['title']} at {jobs[i]['company']}\n"
-        f"{jobs[i].get('description', '')[:600]}"
+        f"{_normalize_description(jobs[i].get('description', ''))[:600]}"
         for seq, i in enumerate(uncached)
     )
 
@@ -219,6 +251,7 @@ Return a JSON array only — no prose, no markdown fences. One object per job in
         model="claude-haiku-4-5-20251001",
         max_tokens=4096,
         system=_SYSTEM,
+        temperature=SCORING_TEMPERATURE,
         messages=[{"role": "user", "content": prompt}],
     )
 
