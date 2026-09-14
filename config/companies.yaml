@@ -1,12 +1,15 @@
-# Curated registry of companies to poll for new postings.
+# Curated companies to poll for new postings, and their sponsorship policy.
 #
-# This file is hand-maintained, not auto-discovered. Add a company when it is
-# worth tracking; remove it when it stops being.
+# The pipeline polls the `companies` table in applications/sourced_jobs.db.
+# Entries here are copied into it on every pass as source 'manual', alongside
+# boards found by tools/sourcing/discover_companies.py. Deleting an entry here
+# does not remove its row from the table.
 #
 #   company     Display name used in the dashboard.
-#   ats         greenhouse | ashby
+#   ats         greenhouse | ashby | lever
 #   token       The board slug. Greenhouse: boards.greenhouse.io/<token>
 #               Ashby: jobs.ashbyhq.com/<token>
+#               Lever: jobs.lever.co/<token>
 #   sponsorship yes | no | unknown
 #
 # On sponsorship: every entry below is `unknown` because no sponsorship policy

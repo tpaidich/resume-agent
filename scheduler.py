@@ -5,7 +5,8 @@ URL mode — run the agent over a file of job URLs:
   python scheduler.py urls.txt          # run once
   python scheduler.py urls.txt 24       # run every 24 hours
 
-Sourcing mode — poll the company boards in config/companies.yaml, filter,
+Sourcing mode — poll the company boards in the companies table (seeded from
+config/companies.yaml, grown by tools/sourcing/discover_companies.py), filter,
 score, and queue postings for review:
   python scheduler.py source            # run once
   python scheduler.py source 6          # run every 6 hours

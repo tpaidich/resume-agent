@@ -6,38 +6,46 @@ The pass ends with rows in applications/sourced_jobs.db waiting for review.
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import yaml
-
-from . import ashby_source, greenhouse_source, job_store, sponsorship_filter
+from . import ashby_source, company_store, greenhouse_source, job_store, lever_source, sponsorship_filter
 from .job_scorer import _background_summary, claude_score, keyword_match
-from .paths import COMPANIES_FILE
 
 _SOURCES = {
     "greenhouse": greenhouse_source.fetch_jobs,
     "ashby": ashby_source.fetch_jobs,
+    "lever": lever_source.fetch_jobs,
 }
+
+# A board whose last poll came back empty is polled weekly instead of every
+# pass. Most discovered boards are not hiring on any given day.
+DEAD_BOARD_RECHECK_DAYS = 7
 
 
 def load_companies(path: str | None = None) -> list[dict]:
-    with open(path or COMPANIES_FILE) as f:
-        entries = yaml.safe_load(f) or []
+    """Boards to poll, from the companies table.
 
-    valid = []
-    for entry in entries:
-        ats = str(entry.get("ats", "")).strip().lower()
-        if ats not in _SOURCES:
-            print(f"[pipeline] {entry.get('company')}: unsupported ats '{ats}', skipping")
-            continue
-        if not entry.get("token") or not entry.get("company"):
-            print(f"[pipeline] entry missing company or token, skipping: {entry}")
-            continue
-        valid.append({**entry, "ats": ats})
-    return valid
+    companies.yaml is folded in on every call, so a hand-added entry is picked
+    up without running discovery. See tools/sourcing/discover_companies.py for
+    how the rest of the table fills.
+    """
+    company_store.init_db()
+    added = company_store.seed_from_yaml(path)
+    if added:
+        print(f"[pipeline] added {added} companies from companies.yaml")
+
+    return [
+        {"company": row["name"] or row["slug"], "token": row["slug"], "ats": row["platform"]}
+        for row in company_store.pollable_companies(DEAD_BOARD_RECHECK_DAYS)
+    ]
 
 
 def fetch_all(companies: list[dict], max_workers: int = 6) -> list[dict]:
-    """Fetch every board concurrently. A failing board yields an empty list."""
+    """Fetch every board concurrently. A failing board yields an empty list.
+
+    Each board's result is written back to the companies table. A request
+    failure also reads as empty, which only defers that board to next week.
+    """
     postings = []
+    checked = []
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
             pool.submit(_SOURCES[c["ats"]], c["token"], c["company"]): c
@@ -46,9 +54,13 @@ def fetch_all(companies: list[dict], max_workers: int = 6) -> list[dict]:
         for future in as_completed(futures):
             company = futures[future]
             try:
-                postings.extend(future.result())
+                jobs = future.result()
             except Exception as e:
                 print(f"[pipeline] {company['company']}: unexpected error — {e}")
+                continue
+            postings.extend(jobs)
+            checked.append((company["token"], company["ats"], bool(jobs)))
+    company_store.mark_checked(checked)
     return postings
 
 

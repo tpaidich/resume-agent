@@ -166,14 +166,33 @@ streamlit run app.py
 
 **Watch company job boards automatically**
 
-Add companies to `config/companies.yaml`, then:
-
 ```bash
 python3 scheduler.py source 6
 ```
 
 Checks every 6 hours for new postings, scores them, and queues them up. Review
 what it found with `streamlit run dashboard/review_app.py`.
+
+The boards it polls live in a `companies` table in `applications/sourced_jobs.db`.
+`config/companies.yaml` is copied in on every pass, and two discovery jobs add
+the rest:
+
+```bash
+python3 -m tools.sourcing.discover_companies simplify   # weekly
+python3 -m tools.sourcing.discover_companies yc         # monthly
+python3 -m tools.sourcing.discover_companies stats
+```
+
+`simplify` reads the Greenhouse, Ashby, and Lever links out of the SimplifyJobs
+new-grad and internship listings. `yc` walks the YC directory, guesses each
+company's board slug from its domain, and falls back to looking for a board link
+on its careers page. Add `--all` to sweep every active YC company instead of
+only those marked hiring. Boards that come back empty are polled weekly rather
+than every pass.
+
+The first pass after a discovery run pulls far more postings than before. Most
+fail the keyword gate for free; cap the Claude calls on the rest with
+`--limit`.
 
 ---
 
