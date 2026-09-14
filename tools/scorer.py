@@ -109,8 +109,25 @@ def _normalize_description(text: str) -> str:
     return "\n".join(lines)
 
 
+def _resume_fingerprint() -> str:
+    """A short hash of resume/master.yaml's contents.
+
+    Part of every cache key, so editing your resume re-scores postings instead
+    of serving scores computed against the old version. Before this, adding a
+    whole role to the resume left every cached posting showing gaps the new
+    role had already filled.
+    """
+    import hashlib
+
+    try:
+        with open("resume/master.yaml", "rb") as f:
+            return hashlib.sha1(f.read()).hexdigest()[:12]
+    except OSError:
+        return "no-resume"
+
+
 def _cache_key(url: str) -> str:
-    return f"v{SCORER_VERSION}|{url}"
+    return f"v{SCORER_VERSION}|{_resume_fingerprint()}|{url}"
 
 # ---------------------------------------------------------------------------
 # Cache helpers
