@@ -15,6 +15,7 @@ Run it from the repo root:
 Nothing here applies to a job. /score returns a verdict; /resume writes a
 tailored PDF into applications/. Submitting an application stays manual.
 """
+import base64
 import json
 import os
 import re
@@ -329,32 +330,100 @@ Return JSON only, no prose, no markdown fences:
     }
 
 
+PROFILE_FILE = os.path.join(_ROOT, "config", "profile.yaml")
+MASTER_RESUME_PDF = os.path.join(_ROOT, "resume", "master_resume.pdf")
+
+
+def get_profile() -> dict:
+    """Autofill answers from config/profile.yaml.
+
+    Served as written. A missing file or a blank value means the extension
+    leaves that question for you; nothing is inferred here.
+    """
+    if not os.path.exists(PROFILE_FILE):
+        return {"ok": False, "error": "No config/profile.yaml yet. Copy config/profile.example.yaml and fill it in."}
+    with open(PROFILE_FILE) as f:
+        return {"ok": True, "profile": yaml.safe_load(f) or {}}
+
+
+def get_resume_file() -> dict:
+    """The master resume autofill attaches, as base64 for the extension."""
+    if not os.path.exists(MASTER_RESUME_PDF):
+        return {"ok": False, "error": "No resume/master_resume.pdf yet, so no resume was attached."}
+    with open(MASTER_RESUME_PDF, "rb") as f:
+        data = f.read()
+    name = (_load_master().get("meta", {}).get("name") or "").strip()
+    return {
+        "ok": True,
+        "filename": f"{name} Resume.pdf" if name else "Resume.pdf",
+        "mime": "application/pdf",
+        "base64": base64.b64encode(data).decode("ascii"),
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+
+    def _origin_ok(self) -> bool:
+        """Only the extension, or a local tool, may use this server.
+
+        It serves your phone number and self-identification answers. Being
+        bound to 127.0.0.1 keeps other machines out, but not the websites you
+        visit: their scripts run on your machine too. Browsers attach an Origin
+        header to cross-site requests, so anything carrying one that is not the
+        extension is refused. The Host check stops DNS rebinding, where a
+        hostile domain resolves itself to 127.0.0.1.
+        """
+        host = (self.headers.get("Host") or "").rsplit(":", 1)[0]
+        if host not in ("127.0.0.1", "localhost"):
+            return False
+        origin = self.headers.get("Origin")
+        return origin is None or origin.startswith("chrome-extension://")
 
     def _send(self, code: int, body: dict):
         raw = json.dumps(body).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(raw)))
-        # The extension's service worker is the only intended caller, and the
-        # server is bound to loopback, so a permissive origin is safe here.
-        self.send_header("Access-Control-Allow-Origin", "*")
+        # Echo the extension's own origin and nothing else. A wildcard here would
+        # let any page you have open read responses from this server.
+        origin = self.headers.get("Origin") or ""
+        if origin.startswith("chrome-extension://"):
+            self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
         self.end_headers()
         self.wfile.write(raw)
 
     def do_OPTIONS(self):
+        if not self._origin_ok():
+            self._send(403, {"ok": False, "error": "forbidden"})
+            return
         self._send(204, {})
 
     def do_GET(self):
-        if self.path == "/health":
-            self._send(200, {"ok": True, "service": "resume-agent score server"})
-        else:
+        if not self._origin_ok():
+            self._send(403, {"ok": False, "error": "forbidden"})
+            return
+        routes = {
+            "/health": lambda: {"ok": True, "service": "resume-agent score server"},
+            "/profile": get_profile,
+            "/resume-file": get_resume_file,
+        }
+        handler = routes.get(self.path)
+        if handler is None:
             self._send(404, {"ok": False, "error": "not found"})
+            return
+        try:
+            self._send(200, handler())
+        except Exception as e:
+            traceback.print_exc()
+            self._send(500, {"ok": False, "error": f"{type(e).__name__}: {e}"})
 
     def do_POST(self):
+        if not self._origin_ok():
+            self._send(403, {"ok": False, "error": "forbidden"})
+            return
         routes = {
             "/score": score_posting,
             "/resume": generate_resume,
@@ -415,7 +484,7 @@ def main():
         raise
 
     print(f"[server] listening on http://{HOST}:{PORT}")
-    print("[server] endpoints: GET /health, POST /score, POST /resume, POST /message")
+    print("[server] endpoints: GET /health /profile /resume-file, POST /score /resume /message")
     print("[server] stop with Ctrl-C")
     try:
         server.serve_forever()

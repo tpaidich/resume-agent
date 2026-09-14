@@ -14,6 +14,12 @@ applications/
 # Your outreach phrasing. See config/outreach.example.yaml.
 config/outreach.yaml
 
+# Autofill answers: phone, work authorization, self-identification.
+config/profile.yaml
+
+# The resume autofill attaches to applications.
+resume/master_resume.pdf
+
 # Unrelated archive that happens to live in resume/.
 resume/*.zip
 

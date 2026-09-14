@@ -1,0 +1,33 @@
+# Copy to profile.yaml and fill in. profile.yaml is gitignored.
+#
+# The extension's autofill reads this. Anything left blank stays blank on the
+# form, and a question it cannot answer from here stops it from submitting.
+
+first_name: "Your"
+last_name: "Name"
+preferred_name: ""
+email: "you@example.com"
+phone: "(555) 555-5555"
+location: "City, ST"
+city: "City"
+state: "ST"
+country: "United States"
+linkedin: "https://www.linkedin.com/in/your-handle"
+github: "https://github.com/your-handle"
+website: "https://example.com"
+
+# Answer these truthfully. Autofill gives these answers on every application.
+# Quote them: unquoted yes and no turn into true and false in YAML.
+work_authorization:
+  authorized_to_work_us: "yes"   # "yes" or "no"
+  requires_sponsorship: "no"     # "yes" or "no", now or in the future
+
+# Voluntary self-identification. Leave any blank and autofill skips that
+# question. Values are matched against the option text on the form, so write
+# them the way forms phrase them.
+eeo:
+  gender: ""           # e.g. Female, Male, Decline to self-identify
+  hispanic_latino: ""  # e.g. Yes, No, Decline to self-identify
+  race: ""             # e.g. Asian, White, Two or More Races
+  veteran: ""          # e.g. I am not a protected veteran
+  disability: ""       # e.g. No, I do not have a disability
