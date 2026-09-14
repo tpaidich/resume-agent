@@ -16,6 +16,15 @@ async function post(path, payload) {
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, respond) => {
+  const getRoutes = { "get-profile": "/profile", "get-resume-file": "/resume-file" };
+  if (getRoutes[message.type]) {
+    fetch(`${SERVER}${getRoutes[message.type]}`)
+      .then((r) => r.json())
+      .then(respond)
+      .catch(() => respond({ ok: false, unreachable: true, error: "Scoring server is not running." }));
+    return true;
+  }
+
   const routes = {
     score: "/score",
     "generate-resume": "/resume",

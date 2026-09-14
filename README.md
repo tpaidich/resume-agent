@@ -4,10 +4,12 @@ Open a job posting. Get told whether to apply.
 
 A Chrome extension reads the posting you're looking at, scores it against your
 resume, and gives you a verdict: **APPLY**, **MAYBE**, **SKIP**, or **NO**. If
-it's worth pursuing, one click writes a tailored one-page resume PDF and one
-click drafts a cold message.
+it's worth pursuing, one click writes a tailored one-page resume PDF, one click
+drafts a cold message, and one click fills in the application form.
 
-It never applies to anything. It hands you a file and a draft. You send them.
+It submits an application on its own only when every question on the form has a
+known answer and no CAPTCHA guards it. Most real forms ask something only you
+can answer, so in practice it fills the form and you submit it.
 
 <img width="387" height="706" alt="The verdict panel on a job posting, showing an APPLY verdict with strengths, gaps, and the two action buttons" src="https://github.com/user-attachments/assets/3c44ab3a-69a6-4600-bb54-83b8eff02be9" />
 
@@ -47,20 +49,26 @@ export ANTHROPIC_API_KEY=sk-ant-your-key-here
 
 Put that line in your `~/.zshrc` so it sticks.
 
-**3. Fill in your resume**
+**3. Add your personal files**
 
-Three files hold personal data, so they're not in this repo. Copy each example
-and edit it:
+These hold personal data, so they're not in this repo. Copy each example and
+edit it:
 
 ```bash
 cp resume/master.example.yaml resume/master.yaml
 cp resume/template.example.tex resume/template.tex
 cp config/outreach.example.yaml config/outreach.yaml
+cp config/profile.example.yaml config/profile.yaml
 ```
 
 - `master.yaml` is your work history. Everything reads from it.
 - `template.tex` is the resume layout and your contact details.
 - `outreach.yaml` is one line describing what you do now, used in cold messages.
+- `profile.yaml` holds your autofill answers: contact details, work
+  authorization, and any self-identification questions you want answered.
+
+For autofill to attach a resume, save your resume PDF as
+`resume/master_resume.pdf`.
 
 **4. Start the server**
 
@@ -68,7 +76,9 @@ cp config/outreach.example.yaml config/outreach.yaml
 python3 server/score_server.py
 ```
 
-Leave it running. It holds your API key so the browser never sees it.
+Leave it running. It holds your API key so the browser never sees it. It also
+only answers the extension, so websites you have open can't read your profile
+from it.
 
 **5. Load the extension**
 
@@ -94,16 +104,43 @@ Open a job posting. The panel appears and scores it.
 **NO overrides the score.** A 90-point match at a company that won't sponsor is
 still not applicable, so it says so and shows you the exact sentence.
 
-On APPLY and MAYBE you get two buttons:
+On APPLY and MAYBE you get three buttons:
 
 - **Generate tailored resume** writes a PDF into `applications/`
 - **Draft cold message** writes an outreach note you can edit and copy
+- **Autofill application** fills in the form on the page
 
-On SKIP neither appears, since spending money on a posting you were told to skip
-is the wrong default. There's a small "Draft anyway" link if you disagree.
+On SKIP none appear, since spending effort on a posting you were told to skip is
+the wrong default. There's a small "Draft anyway" link if you disagree.
 
 **Cost:** about a tenth of a cent per posting scored. Results are cached per
-URL, so reopening a posting is free.
+URL, so reopening a posting is free. Autofill costs nothing.
+
+---
+
+## Autofill
+
+It fills what `profile.yaml` can answer truthfully: name, email, phone, links,
+location, work authorization, the self-identification questions you chose to
+answer, and your resume file. Fields it filled get a green outline. Anything it
+left for you gets amber. It never overwrites something you already typed.
+
+It submits on its own only when all of these hold:
+
+| Condition | Why |
+|---|---|
+| No free-response questions | "Why this company?" is yours to write |
+| No question it doesn't recognize | It won't guess |
+| No agreement to accept | It never ticks an arbitration or consent box for you |
+| No CAPTCHA on the page | It never gets past one for you |
+
+When they all hold, it counts down five seconds with a cancel button before
+submitting. Closing the panel cancels too.
+
+**Work authorization gets extra care.** "Will you require sponsorship?" and "Are
+you authorized to work without sponsorship?" need opposite answers from the same
+person, and it tells them apart. A question phrased some other way is left for
+you, because a wrong answer there misrepresents your status.
 
 ---
 

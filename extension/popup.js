@@ -39,7 +39,7 @@ async function scoreActiveTab() {
 
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    files: ["extract.js", "content.js"],
+    files: ["extract.js", "autofill.js", "content.js"],
   });
 
   const [result] = await chrome.scripting.executeScript({

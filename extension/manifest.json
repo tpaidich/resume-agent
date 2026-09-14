@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Resume Agent: Should I Apply?",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Scores the job posting you are looking at against your resume and tells you whether to apply.",
   "permissions": [
     "activeTab",
@@ -25,6 +25,7 @@
       ],
       "js": [
         "extract.js",
+        "autofill.js",
         "content.js"
       ],
       "run_at": "document_idle"

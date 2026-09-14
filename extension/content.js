@@ -12,7 +12,7 @@
   if (window.__resumeAgentContentLoaded) return;
   window.__resumeAgentContentLoaded = true;
 
-  console.log("[resume-agent] v4 (collapsible sections, cold message) ready on", location.host);
+  console.log("[resume-agent] v5 (autofill) ready on", location.host);
 
   // Styles live here rather than in a separate file so the panel can never
   // render half-loaded. They are injected into the shadow root below.
@@ -119,6 +119,9 @@
   font-size: 11px; color: #7a828e;
 }
 
+.fill { margin-top: 10px; }
+.why { color: #7a828e; }
+
 @media (prefers-color-scheme: dark) {
   .wrap { color: #e6e8eb; background: #1b1f24; border-color: #333a42; }
   .meta, .count { color: #9aa4b2; }
@@ -134,7 +137,7 @@
   .override { color: #9aa4b2; }
   .msg-subject { background: #262c33; }
   .msg-body { background: #14181c; border-color: #3a424b; color: #e6e8eb; }
-  .hint, .foot { color: #8b939f; }
+  .hint, .foot, .why { color: #8b939f; }
   .foot { border-top-color: #2c333a; }
   .saved { color: #4ac26b; }
 }
@@ -253,7 +256,7 @@
     if (data.gaps?.length) body.appendChild(collapsible("Gaps", data.gaps));
 
     body.appendChild(actionsFor(data));
-    body.appendChild(el("div", "foot", "Drafts and PDFs only. It never submits or sends anything."));
+    body.appendChild(el("div", "foot", "Autofill submits only when every question is answered and no CAPTCHA guards the form."));
     wrap.appendChild(body);
   }
 
@@ -289,6 +292,10 @@
     const msgBtn = el("button", "btn", "Draft cold message");
     msgBtn.addEventListener("click", () => makeMessage(msgBtn, actions));
     actions.appendChild(msgBtn);
+
+    const fillBtn = el("button", "btn", "Autofill application");
+    fillBtn.addEventListener("click", () => makeAutofill(fillBtn, actions));
+    actions.appendChild(fillBtn);
 
     return actions;
   }
@@ -383,6 +390,98 @@
     box.appendChild(copy);
 
     box.appendChild(el("div", "hint", "Replace [name] and attach your resume before sending. Nothing is sent for you."));
+    return box;
+  }
+
+  // --- autofill -------------------------------------------------------------
+  function makeAutofill(button, container) {
+    button.disabled = true;
+    button.textContent = "Loading your profile...";
+    chrome.runtime.sendMessage({ type: "get-profile" }, (prof) => {
+      if (!prof || !prof.ok) {
+        button.disabled = false;
+        button.textContent = "Autofill application";
+        container.appendChild(el("div", "warn", (prof && prof.error) || "Could not load your profile."));
+        return;
+      }
+      chrome.runtime.sendMessage({ type: "get-resume-file" }, async (res) => {
+        const resume = res && res.ok ? res : null;
+        button.textContent = "Filling...";
+        let out;
+        try {
+          out = await window.__resumeAgentAutofill.run(prof.profile, resume);
+        } catch (e) {
+          out = { error: `Autofill failed: ${e.message || e}` };
+        }
+        button.disabled = false;
+        button.textContent = "Autofill again";
+        container.querySelector(".fill")?.remove();
+        container.appendChild(fillReport(out, resume ? "" : (res && res.error) || ""));
+      });
+    });
+  }
+
+  function fillReport(out, resumeProblem) {
+    const box = el("div", "fill");
+    if (out.error) {
+      box.appendChild(el("div", "warn", out.error));
+      return box;
+    }
+
+    const kept = out.kept ? `, kept ${out.kept} you had already filled` : "";
+    box.appendChild(el("div", "headline", `Filled ${out.filled}${kept}.`));
+    if (resumeProblem) box.appendChild(el("div", "hint", resumeProblem));
+
+    if (out.needs.length) {
+      box.appendChild(el("div", "label", "Needs you"));
+      const list = el("ul", "list");
+      out.needs.slice(0, 12).forEach((n) => {
+        const item = el("li", null, n.label);
+        item.appendChild(el("span", "why", ` · ${n.reason}`));
+        list.appendChild(item);
+      });
+      if (out.needs.length > 12) {
+        list.appendChild(el("li", null, `and ${out.needs.length - 12} more, outlined on the page`));
+      }
+      box.appendChild(list);
+    }
+
+    if (!out.eligible) {
+      box.appendChild(el("div", "hint",
+        `Not submitting. ${out.reasons.join(" ")} Filled fields are outlined green, the rest amber.`));
+      return box;
+    }
+
+    // Everything answered: a short countdown you can cancel, rather than an
+    // instant submit you cannot take back.
+    let left = 5;
+    const line = el("div", "hint", `Everything is answered. Submitting in ${left}s.`);
+    const cancel = el("button", "btn", "Cancel submit");
+    const timer = setInterval(() => {
+      // Closing the panel cancels too.
+      if (!line.isConnected) {
+        clearInterval(timer);
+        return;
+      }
+      left -= 1;
+      if (left > 0) {
+        line.textContent = `Everything is answered. Submitting in ${left}s.`;
+        return;
+      }
+      clearInterval(timer);
+      cancel.remove();
+      const sent = window.__resumeAgentAutofill.submitNow(out.submit);
+      line.textContent = sent.ok
+        ? "Submitted. Check the page for the confirmation."
+        : `Did not submit: ${sent.reason}.`;
+    }, 1000);
+    cancel.addEventListener("click", () => {
+      clearInterval(timer);
+      cancel.remove();
+      line.textContent = "Submit cancelled. Review the form and submit it yourself.";
+    });
+    box.appendChild(line);
+    box.appendChild(cancel);
     return box;
   }
 
