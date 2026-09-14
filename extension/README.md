@@ -112,6 +112,12 @@ opposite answers from the same profile. Anything phrased otherwise is left for
 you. "Authorized to work in the country where the job is located" is answered
 only when the posting's own structured data says the job is in the US.
 
+Relocation and in-person questions are answered from `work_preferences`, but
+only when the question asks whether you are willing: "open to relocation",
+"able to work from our office three days a week". Questions that mention
+relocation or an office but ask something else, like "Do you need relocation
+assistance?" or "Please confirm this role is onsite", are left for you.
+
 Self-identification questions are answered only for the values you set in
 `profile.yaml`. Blank ones are left alone.
 

@@ -125,8 +125,8 @@ URL, so reopening a posting is free. Autofill costs nothing.
 ## Autofill
 
 It fills what `profile.yaml` can answer truthfully: name, email, phone, links,
-location, work authorization, the self-identification questions you chose to
-answer, and your resume file. Fields it filled get a green outline. Anything it
+location, work authorization, whether you'll relocate or work in person, the
+self-identification questions you chose to answer, and your resume file. Fields it filled get a green outline. Anything it
 left for you gets amber. It never overwrites something you already typed.
 
 It submits on its own only when all of these hold:

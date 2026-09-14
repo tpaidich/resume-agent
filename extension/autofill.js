@@ -139,6 +139,11 @@
 
   // --- deciding what a question is ------------------------------------------
 
+  // Working in person: onsite, in office, hybrid, or a set number of days at an
+  // office. Matches the wordings on the Greenhouse and Ashby forms checked,
+  // like "in office 4 days/week" and "work from our US office three days per week".
+  const IN_PERSON = /in[- ]person|in[- ]office|on[- ]?site|\bhybrid\b|\bfrom (our|the|an?)\b[^?]*\boffice\b|\bdays?\s*(a|per|\/)\s*week\b[^?]*\boffice\b|\boffice\b[^?]*\bdays?\s*(a|per|\/)\s*week\b/;
+
   // Order matters. Agreements are caught first, so an agreement that mentions
   // work authorization is never ticked. Sponsorship comes before authorization
   // because "authorized to work without sponsorship" is a sponsorship question,
@@ -147,6 +152,8 @@
     ["legal", (l) => /arbitrat|agreement|acknowledg|i (have )?read|consent|certif|attest|terms (of|and)|privacy (policy|notice)|ai policy/.test(l)],
     ["sponsorship", (l) => /sponsor/.test(l)],
     ["authorized", (l) => /authori[sz]ed to work|legally (eligible|able|permitted) to work|eligib\w* to work|right to work/.test(l)],
+    ["relocation", (l) => /relocat/.test(l)],
+    ["in_person", (l) => IN_PERSON.test(l)],
     ["gender", (l) => /\bgender\b/.test(l)],
     ["hispanic", (l) => /hispanic|latin[oxa]/.test(l)],
     ["race", (l) => /\brace\b|ethnicit/.test(l)],
@@ -166,8 +173,9 @@
   ];
 
   // Keys a field's name or id may decide on its own, like Ashby's
-  // "..._eeoc_gender". Work authorization is deliberately not among them: it is
-  // only ever answered from the question's actual wording.
+  // "..._eeoc_gender". Work authorization, relocation, and in-person are
+  // deliberately not among them: those are only ever answered from the
+  // question's actual wording.
   const NAME_HINT_KEYS = new Set([
     "gender", "hispanic", "race", "veteran", "disability",
     "first_name", "last_name", "email", "phone", "linkedin", "github", "website", "country",
@@ -197,12 +205,37 @@
 
   const asUrl = (v) => (!v ? null : /^https?:\/\//i.test(v) ? v : `https://${v}`);
 
+  // Relocation and in-person questions are answered only when they ask whether
+  // you are willing. Plenty of questions that mention relocation or an office
+  // ask something else: "Do you need relocation assistance?", "Where would you
+  // relocate to?", "Please confirm this role is onsite." Answering those from
+  // a willingness would put a wrong answer on the application.
+  const ASKS_WILLINGNESS = /\b(open|willing|able|prepared|comfortable|ok|okay|happy|commit\w*|available|interested)\b|\bcan you\b|\bwould you (consider|be)\b/;
+  const RELOCATION_ASKS_SOMETHING_ELSE = /assist|package|stipend|reimburs|support|cover|cost|expense|benefit|bonus|\bwhere\b|which (city|cities|location|office)/;
+
+  function workPreferenceAnswer(label, p) {
+    const l = low(label);
+    if (!ASKS_WILLINGNESS.test(l)) return null;
+
+    const mentionsRelocation = /relocat/.test(l);
+    if (mentionsRelocation && RELOCATION_ASKS_SOMETHING_ELSE.test(l)) return null;
+
+    const prefs = p.work_preferences || {};
+    const answers = [];
+    if (mentionsRelocation) answers.push(yesNo(prefs.open_to_relocation));
+    if (IN_PERSON.test(l)) answers.push(yesNo(prefs.willing_to_work_in_person));
+    if (!answers.length || answers.includes(null)) return null;
+    // A question asking about both is a yes only when both answers are yes.
+    return { yesno: answers.every(Boolean) };
+  }
+
   // A string, {yesno}, SKIP for a self-ID question left blank in the profile,
   // or null when the profile cannot answer the question truthfully.
   function answerFor(key, label, p) {
     const l = low(label);
     const wa = p.work_authorization || {};
     if (key in EEO) return norm((p.eeo || {})[EEO[key]] || "") || SKIP;
+    if (key === "relocation" || key === "in_person") return workPreferenceAnswer(label, p);
 
     switch (key) {
       case "first_name": return p.first_name || null;
@@ -398,6 +431,17 @@
     target.style.outlineOffset = "2px";
   }
 
+  // Why a recognized question was still left for you.
+  function unansweredReason(key) {
+    if (key === "sponsorship" || key === "authorized") {
+      return "work authorization, phrased in a way it will not guess at";
+    }
+    if (key === "relocation" || key === "in_person") {
+      return "asks something other than whether you are willing";
+    }
+    return "no answer in your profile";
+  }
+
   async function handle(q, profile, resume) {
     const result = {
       label: norm(q.label).replace(/\s*\*$/, "").slice(0, 90) || "Unlabeled field",
@@ -433,11 +477,7 @@
 
     const answer = answerFor(key, q.label, profile);
     if (answer === SKIP) return q.required ? done("needs", "left blank in your profile") : done("skipped");
-    if (answer === null) {
-      return done("needs", key === "sponsorship" || key === "authorized"
-        ? "work authorization, phrased in a way it will not guess at"
-        : "no answer in your profile");
-    }
+    if (answer === null) return done("needs", unansweredReason(key));
 
     switch (q.kind) {
       case "text":

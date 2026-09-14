@@ -22,6 +22,14 @@ work_authorization:
   authorized_to_work_us: "yes"   # "yes" or "no"
   requires_sponsorship: "no"     # "yes" or "no", now or in the future
 
+# Answered only when a question asks whether you are willing, like "open to
+# relocation" or "able to work from our office three days a week". Questions
+# that ask something else, like "Do you need relocation assistance?", are left
+# for you. Remove either line to have autofill leave those questions alone.
+work_preferences:
+  open_to_relocation: "yes"          # "yes" or "no"
+  willing_to_work_in_person: "yes"   # "yes" or "no", including hybrid and onsite
+
 # Voluntary self-identification. Leave any blank and autofill skips that
 # question. Values are matched against the option text on the form, so write
 # them the way forms phrase them.
