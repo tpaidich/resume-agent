@@ -12,7 +12,7 @@
   if (window.__resumeAgentContentLoaded) return;
   window.__resumeAgentContentLoaded = true;
 
-  console.log("[resume-agent] v5 (autofill) ready on", location.host);
+  console.log("[resume-agent] v6 (autofill without scoring) ready on", location.host);
 
   // Styles live here rather than in a separate file so the panel can never
   // render half-loaded. They are injected into the shadow root below.
@@ -144,8 +144,12 @@
 `;
 
   const HOST_ID = "resume-agent-host";
+  const FOOT_TEXT = "Autofill submits only when every question is answered and no CAPTCHA guards the form.";
   let lastResult = null;
   let inFlight = false;
+  // Set once autofill runs on this page. An automatic score that finishes
+  // afterwards must not replace the panel and wipe the fill report.
+  let autofillStarted = false;
 
   const VERDICT_CLASS = { APPLY: "apply", MAYBE: "maybe", SKIP: "skip", NO: "no" };
 
@@ -256,19 +260,22 @@
     if (data.gaps?.length) body.appendChild(collapsible("Gaps", data.gaps));
 
     body.appendChild(actionsFor(data));
-    body.appendChild(el("div", "foot", "Autofill submits only when every question is answered and no CAPTCHA guards the form."));
+    body.appendChild(el("div", "foot", FOOT_TEXT));
     wrap.appendChild(body);
   }
 
   function actionsFor(data) {
-    if (WORTH_EFFORT.has(data.verdict)) return actionButtons();
+    if (WORTH_EFFORT.has(data.verdict)) return actionButtons({ autofill: true });
 
+    const group = el("div");
     const box = el("div", "noaction");
+    group.appendChild(box);
+
     if (data.verdict === "NO") {
       box.appendChild(document.createTextNode(
         "Nothing generated. This posting rules out sponsorship, so the score does not matter."
       ));
-      return box;
+      return group;
     }
 
     box.appendChild(document.createTextNode(
@@ -276,13 +283,17 @@
     ));
     // An escape hatch, deliberately quiet. The scorer is not always right.
     const override = el("button", "override", "Draft anyway");
-    override.addEventListener("click", () => box.replaceChildren(actionButtons()));
+    override.addEventListener("click", () => box.replaceChildren(actionButtons({ autofill: false })));
     box.appendChild(document.createElement("br"));
     box.appendChild(override);
-    return box;
+
+    // Autofill costs nothing and runs on a form you already chose to open, so
+    // a low score does not hide it.
+    group.appendChild(autofillActions());
+    return group;
   }
 
-  function actionButtons() {
+  function actionButtons({ autofill }) {
     const actions = el("div", "actions");
 
     const resumeBtn = el("button", "btn btn-primary", "Generate tailored resume");
@@ -293,10 +304,20 @@
     msgBtn.addEventListener("click", () => makeMessage(msgBtn, actions));
     actions.appendChild(msgBtn);
 
+    if (autofill) {
+      const fillBtn = el("button", "btn", "Autofill application");
+      fillBtn.addEventListener("click", () => makeAutofill(fillBtn, actions));
+      actions.appendChild(fillBtn);
+    }
+
+    return actions;
+  }
+
+  function autofillActions() {
+    const actions = el("div", "actions");
     const fillBtn = el("button", "btn", "Autofill application");
     fillBtn.addEventListener("click", () => makeAutofill(fillBtn, actions));
     actions.appendChild(fillBtn);
-
     return actions;
   }
 
@@ -395,6 +416,7 @@
 
   // --- autofill -------------------------------------------------------------
   function makeAutofill(button, container) {
+    autofillStarted = true;
     button.disabled = true;
     button.textContent = "Loading your profile...";
     chrome.runtime.sendMessage({ type: "get-profile" }, (prof) => {
@@ -485,9 +507,37 @@
     return box;
   }
 
+  // Autofill without scoring first, started from the toolbar popup. Uses the
+  // verdict panel's own button when one is showing, adds a button to the panel
+  // when it has none, and otherwise opens a panel of its own.
+  window.__resumeAgentAutofillNow = function () {
+    const root = document.getElementById(HOST_ID)?.shadowRoot;
+    const buttons = root ? [...root.querySelectorAll("button")] : [];
+    if (buttons.some((b) => /^(loading your profile|filling)/i.test(b.textContent))) return;
+
+    const ready = buttons.find((b) => /^autofill/i.test(b.textContent) && !b.disabled);
+    if (ready) {
+      ready.click();
+      return;
+    }
+
+    let body = root && root.querySelector(".body");
+    if (!body) {
+      const wrap = shadow();
+      wrap.appendChild(banner("loading", "Autofill"));
+      body = el("div", "body");
+      body.appendChild(el("div", "foot", FOOT_TEXT));
+      wrap.appendChild(body);
+    }
+    const actions = autofillActions();
+    body.insertBefore(actions, body.querySelector(":scope > .foot"));
+    actions.querySelector("button").click();
+  };
+
   // --- scoring --------------------------------------------------------------
   function score(force) {
     if (inFlight) return;
+    if (!force && autofillStarted) return;
     const posting = window.__resumeAgentExtract.extract();
     if (!posting) {
       if (force) renderError("No job description found on this page.");
@@ -498,6 +548,9 @@
     renderLoading();
     chrome.runtime.sendMessage({ type: "score", payload: posting }, (reply) => {
       inFlight = false;
+      // Autofill began while this was scoring. Keep its report on screen; you
+      // can still score from the popup.
+      if (!force && autofillStarted) return;
       if (!reply) {
         renderError("Could not reach the extension background worker. Reload the page.");
       } else if (reply.unreachable) {

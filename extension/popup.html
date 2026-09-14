@@ -7,6 +7,8 @@
   h1 { font-size: 13px; margin: 0 0 10px; }
   button { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid #1a1d21;
            background: #1a1d21; color: #fff; font-weight: 600; cursor: pointer; }
+  button.secondary { margin-top: 8px; background: #fff; color: #1a1d21; }
+  button:disabled { opacity: 0.6; cursor: default; }
   label { display: flex; align-items: center; gap: 7px; margin-top: 12px; color: #444; }
   #status { margin-top: 10px; font-size: 12px; }
   .ok { color: #1a7f37; } .bad { color: #b42318; }
@@ -14,6 +16,7 @@
 </style>
 <h1>Should I Apply?</h1>
 <button id="score">Score this page</button>
+<button id="fill" class="secondary">Autofill this page</button>
 <label><input type="checkbox" id="auto"> Score job pages automatically</label>
 <div id="status">Checking server...</div>
 <script src="popup.js"></script>

@@ -110,8 +110,12 @@ On APPLY and MAYBE you get three buttons:
 - **Draft cold message** writes an outreach note you can edit and copy
 - **Autofill application** fills in the form on the page
 
-On SKIP none appear, since spending effort on a posting you were told to skip is
-the wrong default. There's a small "Draft anyway" link if you disagree.
+On SKIP only autofill appears, since spending model calls on a posting you were
+told to skip is the wrong default. There's a small "Draft anyway" link if you
+disagree.
+
+You can also autofill without scoring at all: click the toolbar icon, then
+**Autofill this page**.
 
 **Cost:** about a tenth of a cent per posting scored. Results are cached per
 URL, so reopening a posting is free. Autofill costs nothing.

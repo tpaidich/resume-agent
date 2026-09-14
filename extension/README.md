@@ -75,10 +75,14 @@ On an APPLY or MAYBE the panel offers three things:
 - **Autofill application** fills the form on the page from
   `config/profile.yaml` and attaches `resume/master_resume.pdf`.
 
-On a SKIP none is offered, since spending effort on a posting you were just told
-to skip is the wrong default. A quiet "Draft anyway" link is there when you
-disagree. On a NO, where the posting rules out sponsorship, nothing is offered
-at all.
+On a SKIP only autofill is offered, since spending model calls on a posting you
+were just told to skip is the wrong default. A quiet "Draft anyway" link brings
+back the other two. On a NO, where the posting rules out sponsorship, the panel
+offers nothing.
+
+To autofill without scoring first, open the toolbar popup and click **Autofill
+this page**. That works on any verdict, including NO, and on pages that were
+never scored.
 
 The message prompt carries `master.yaml`'s own `agent_rules` forward, so it
 cannot claim experience the resume does not contain, and it inherits the
