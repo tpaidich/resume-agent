@@ -64,8 +64,21 @@ def fetch_all(companies: list[dict], max_workers: int = 6) -> list[dict]:
     return postings
 
 
-def run_once(score: bool = True, score_limit: int | None = None, path: str | None = None) -> dict:
-    """Run a full pass. Returns a summary dict of what happened."""
+# Only postings published within this many days are stored and scored. Boards
+# carry openings that have sat for months, and every one scored is a Claude call.
+MAX_POSTING_AGE_DAYS = 7
+
+
+def run_once(
+    score: bool = True,
+    score_limit: int | None = None,
+    path: str | None = None,
+    max_age_days: float | None = MAX_POSTING_AGE_DAYS,
+) -> dict:
+    """Run a full pass. Returns a summary dict of what happened.
+
+    max_age_days=None stores and scores postings of any age.
+    """
     started = time.time()
     job_store.init_db()
 
@@ -75,6 +88,9 @@ def run_once(score: bool = True, score_limit: int | None = None, path: str | Non
     known_before = job_store.known_job_ids()
     postings = fetch_all(companies)
     print(f"[pipeline] fetched {len(postings)} postings")
+    if max_age_days is not None:
+        postings = [p for p in postings if job_store.published_within(p.get("published_at"), max_age_days)]
+        print(f"[pipeline] {len(postings)} published in the last {max_age_days:g} days")
 
     registry = sponsorship_filter.load_registry(path)
 
@@ -115,6 +131,9 @@ def run_once(score: bool = True, score_limit: int | None = None, path: str | Non
     # Score anything still unscored, which is the new rows plus any earlier row
     # whose scoring call previously failed.
     pending = job_store.unscored_jobs()
+    if max_age_days is not None:
+        # Rows stored before the age cutoff existed can be months old.
+        pending = [r for r in pending if job_store.published_within(r["published_at"], max_age_days)]
     candidates = []
     for row in pending:
         passes, _families = keyword_match(row["title"], row["description_text"])

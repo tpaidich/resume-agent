@@ -12,7 +12,7 @@ import hashlib
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from .paths import APPLICATIONS_DIR, DB_FILE
 
@@ -45,6 +45,23 @@ CREATE INDEX IF NOT EXISTS idx_company       ON sourced_jobs (company);
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def published_within(published_at: str | None, days: float) -> bool:
+    """True if an ATS publish timestamp falls within the last `days` days.
+
+    A posting with no date, or one that cannot be parsed, counts as outside the
+    window: better to skip it than to score something months old.
+    """
+    if not published_at:
+        return False
+    try:
+        published = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if published.tzinfo is None:
+        published = published.replace(tzinfo=timezone.utc)
+    return published >= datetime.now(timezone.utc) - timedelta(days=days)
 
 
 @contextmanager
@@ -186,9 +203,13 @@ def query_jobs(
     sponsorship_status: list[str] | None = None,
     companies: list[str] | None = None,
     include_unscored: bool = True,
+    max_age_days: float | None = None,
     limit: int | None = None,
 ) -> list[dict]:
-    """Fetch rows for the review queue, highest match_score first."""
+    """Fetch rows for the review queue, highest match_score first.
+
+    max_age_days keeps only postings published within that many days.
+    """
     clauses, params = [], []
 
     if review_status is not None:
@@ -216,11 +237,16 @@ def query_jobs(
         f"SELECT * FROM sourced_jobs {where} "
         "ORDER BY match_score IS NULL, match_score DESC, first_seen_at DESC"
     )
-    if limit:
+    # Publish dates carry mixed UTC offsets, so the age cutoff is applied in
+    # Python rather than SQL, and any limit after it.
+    if limit and max_age_days is None:
         sql += f" LIMIT {int(limit)}"
 
     with _connect() as conn:
-        return [dict(r) for r in conn.execute(sql, params)]
+        rows = [dict(r) for r in conn.execute(sql, params)]
+    if max_age_days is not None:
+        rows = [r for r in rows if published_within(r["published_at"], max_age_days)]
+    return rows[:limit] if limit else rows
 
 
 def unscored_jobs(limit: int | None = None) -> list[dict]:

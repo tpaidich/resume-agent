@@ -173,6 +173,11 @@ python3 scheduler.py source 6
 Checks every 6 hours for new postings, scores them, and queues them up. Review
 what it found with `streamlit run dashboard/review_app.py`.
 
+Only postings published in the last 7 days are stored and scored; change
+`MAX_POSTING_AGE_DAYS` in `tools/sourcing/pipeline.py` to widen that. The
+dashboard shows the same window by default, and its "Posted within" filter goes
+back further for postings already stored.
+
 The boards it polls live in a `companies` table in `applications/sourced_jobs.db`.
 `config/companies.yaml` is copied in on every pass, and two discovery jobs add
 the rest:
@@ -190,9 +195,9 @@ on its careers page. Add `--all` to sweep every active YC company instead of
 only those marked hiring. Boards that come back empty are polled weekly rather
 than every pass.
 
-The first pass after a discovery run pulls far more postings than before. Most
-fail the keyword gate for free; cap the Claude calls on the rest with
-`--limit`.
+Discovery grows the pool to a couple of thousand boards. The 7-day cutoff and
+the keyword gate keep scoring to a few hundred postings on the first pass;
+cap the Claude calls further with `--limit`.
 
 ---
 

@@ -101,6 +101,9 @@ with st.sidebar:
 
     min_score = st.slider("Minimum match score", 1, 10, 1)
     include_unscored = st.checkbox("Include unscored postings", value=True)
+    max_age_days = st.number_input(
+        "Posted within (days; 0 for any age)", min_value=0, max_value=365, value=7, step=1
+    )
 
     sponsorship_choice = st.multiselect(
         "Sponsorship status",
@@ -125,6 +128,7 @@ rows = job_store.query_jobs(
     sponsorship_status=sponsorship_choice or None,
     companies=company_choice or None,
     include_unscored=include_unscored,
+    max_age_days=max_age_days or None,
 )
 
 st.write(f"**{len(rows)}** postings")
